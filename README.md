@@ -1,3 +1,53 @@
+# Запуска проекта  
+Создаем .env файл в корневой директории с содержимым  
+REDIS_HOST=redis  
+REDIS_PORT=6379  
+
+POSTGRES_PASSWORD=postgres  
+POSTGRES_USER=postgres  
+POSTGRES_DB=postgres  
+POSTGRES_HOST=db  
+POSTGRES_PORT=5432  
+
+DB_NAME=postgres  
+DB_HOST=db  
+DB_USER=postgres  
+DB_PASSWORD=postgres  
+DB_PORT=5432  
+
+DEBUG=True  
+SECRET_KEY=ll  
+UWSGI_PROCESSES=1  
+UWSGI_THREADS=16  
+UWSGI_HARAKIRI=240  
+
+ACCESS_TOKEN_TTL=300  
+REFRESH_TOKEN_TTL=1000  
+
+ELASTIC_HOST=elastic  
+ELASTIC_PORT=9200  
+
+REQUEST_RATE_LIMIT=15  
+YANDEX_CLIENT_ID=ef3fe64262ac40a29beef2431669a261  
+YANDEX_CLIENT_SECRET=dd4fb71e89ff4f4ea19752fe6666e01c  
+YANDEX_TOKEN_URL=https://oauth.yandex.ru/token  
+YANDEX_USER_INFO_URL=https://login.yandex.ru/info  
+
+После этого docker compose up --build  
+
+Когда все запустилось накатываем миграции в alembic и django  
+bash migrate.sh
+
+
+В микросервисах request rate limit контролируется с помощью redis  
+В django добавлена кастомная модель User, авторизация реализована через микросервис авторизации.
+Добавлена возможность авторизации через Yandex Id. Предварительно ожидается что пользователь зарегестрирован на нашем ресурсе.  
+В микросервисы добалена трассировка, используется jaeger
+
+
+
+
+
 # Проектная работа 7 спринта
 
 1. Создайте интеграцию Auth-сервиса с сервисом выдачи контента и панелью администратора Django, используя контракт, который вы сделали в прошлом задании.
