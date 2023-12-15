@@ -1,7 +1,6 @@
 from http import HTTPStatus
 from typing import Annotated
 
-import requests
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from fastapi.responses import ORJSONResponse, Response
 
@@ -15,7 +14,7 @@ from services.jwt_service import (JwtService, PermissionDenied,
                                   TokenValidationError, get_jwt_service)
 from services.user_service import (AlreadyExistsError, UserService,
                                    get_user_service)
-from settings.config import OAuthYandexSettings
+from api.v1.auth_utils import login_using_yandex
 
 router = APIRouter()
 
@@ -60,42 +59,24 @@ async def update_user(
 
 
 @router.get(
-        '/login/yandex',
+        '/login/{resource}',
         response_class=ORJSONResponse,
         summary='auth using yandex id',
         description='auth',
 )
-async def login_using_yandex(
+async def login_oauth(
     code: str,
+    resource: str,
     user_service: UserService = Depends(get_user_service),
     jwt_service: JwtService = Depends(get_jwt_service)
 ):
-    oauth_yandex = OAuthYandexSettings()
-
-    headers = {
-        'Content-type': 'application/x-www-form-urlencoded',
-    }
-    data = {
-        'client_id': oauth_yandex.client_id,
-        'client_secret': oauth_yandex.client_secret,
-        'code': code,
-        'grant_type': 'authorization_code'
-    }
-    response = requests.post(
-        oauth_yandex.token_url, headers=headers, data=data)
-
-    token_data = response.json()
-    yandex_access_token = token_data['access_token']
-
-    headers = {'Authorization': f'OAuth {yandex_access_token}'}
-    user_info = requests.get(
-        oauth_yandex.user_info_url, headers=headers).json()
-
-    email = user_info['default_email']
-
+    if resource == 'yandex':
+        email = await login_using_yandex(code)
+    else:
+        return HTTPException(HTTPStatus.NOT_FOUND, 'user not found')
     user = await user_service.get_user_by_email(email)
     if not user:
-        return HTTPException(404, 'user not found')
+        return HTTPException(HTTPStatus.NOT_FOUND, 'user not found')
 
     roles = [x.name for x in user.roles]
     user_claims = {

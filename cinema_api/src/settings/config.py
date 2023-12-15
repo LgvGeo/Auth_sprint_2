@@ -28,3 +28,10 @@ class CommonSettings(BaseSettings):
     request_rate_limit: int = 3
     secret_key: str = 'secret'
     request_rate_limit: int = 15
+    enable_tracer: bool = True
+
+
+class JaegerSettings(BaseSettings):
+    host: str = 'jaeger'
+    port: int = 6831
+    model_config = SettingsConfigDict(env_prefix='jaeger_')
