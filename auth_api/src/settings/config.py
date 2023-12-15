@@ -19,7 +19,7 @@ class PostgresSettings(BaseSettings):
     host: str = '127.0.0.1'
     port: int = 5432
     user: str = 'postgres'
-    password: str = 'postgres'
+    password: str
     db: str = 'postgres'
     model_config = SettingsConfigDict(env_prefix='postgres_')
 
@@ -32,11 +32,18 @@ class CommonSettings(BaseSettings):
     access_token_ttl: int = 300
     refresh_token_ttl: int = 10000
     request_rate_limit: int = 15
+    enable_tracer: bool = True
 
 
 class OAuthYandexSettings(BaseSettings):
-    client_id: str = 'ef3fe64262ac40a29beef2431669a261'
-    client_secret: str = 'dd4fb71e89ff4f4ea19752fe6666e01c'
+    client_id: str
+    client_secret: str
     token_url: str = 'https://oauth.yandex.ru/token'
     user_info_url: str = 'https://login.yandex.ru/info'
     model_config = SettingsConfigDict(env_prefix='yandex_')
+
+
+class JaegerSettings(BaseSettings):
+    host: str = 'jaeger'
+    port: int = 6831
+    model_config = SettingsConfigDict(env_prefix='jaeger_')

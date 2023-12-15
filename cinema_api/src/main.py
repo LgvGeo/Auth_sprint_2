@@ -22,6 +22,9 @@ from settings import config
 from settings.logger import LOGGING
 
 
+COMMON_SETTINGS = config.CommonSettings()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     elstic_conf = config.ElasticsearchSettings()
@@ -36,7 +39,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title=config.CommonSettings().project_name,
+    title=COMMON_SETTINGS.project_name,
     docs_url='/api/cinema/docs/openapi',
     openapi_url='/api/cinema/docs/openapi.json',
     default_response_class=ORJSONResponse,
@@ -46,7 +49,6 @@ app = FastAPI(
 
 @app.middleware('http')
 async def check_rate_limit(request: Request, call_next):
-    common_settings = config.CommonSettings()
     host = request.headers.get('Host')
     redis_conn = await get_redis()
     pipe = redis_conn.pipeline()
@@ -56,7 +58,7 @@ async def check_rate_limit(request: Request, call_next):
     pipe.expire(key, 59)
     result = await pipe.execute()
     request_number = result[0]
-    if request_number > common_settings.request_rate_limit:
+    if request_number > COMMON_SETTINGS.request_rate_limit:
         return Response(
             'request num exceeded',
             HTTPStatus.TOO_MANY_REQUESTS
@@ -83,6 +85,7 @@ async def before_request(request: Request, call_next):
 
 
 def configure_tracer() -> None:
+    jaegrer_settings = config.JaegerSettings()
     trace.set_tracer_provider(
         TracerProvider(
             resource=Resource.create({SERVICE_NAME: 'cinema'})
@@ -91,14 +94,15 @@ def configure_tracer() -> None:
     trace.get_tracer_provider().add_span_processor(
         BatchSpanProcessor(
             JaegerExporter(
-                agent_host_name='jaeger',
-                agent_port=6831,
+                agent_host_name=jaegrer_settings.host,
+                agent_port=jaegrer_settings.port,
             )
         )
     )
 
 
-configure_tracer()
+if COMMON_SETTINGS.enable_tracer:
+    configure_tracer()
 FastAPIInstrumentor.instrument_app(app)
 
 app.include_router(films.router, prefix='/api/v1/films', tags=['films'])

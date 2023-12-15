@@ -21,8 +21,9 @@ def postgres_conntection(**kwargs):
 
 @app.command()
 def main(
-    db_password: str = 'postgres',
-    email: str = 'admin@admin.admin', password: str = 'admin',
+    password: str,
+    db_password: str,
+    email: str = 'admin@admin.admin',
     first_name: str = 'admin', last_name: str = 'admin',
     host: str = 'db',
     port: int = 5432,
